@@ -1,0 +1,13 @@
+[package]
+name = "vst"
+version = "0.1.0"
+authors = ["Eric Wood <eric@ericwood.org>"]
+edition = "2018"
+
+[dependencies]
+serde = "1.0.117"
+vst = "0.2.0"
+baseplug = { git = "https://github.com/wrl/baseplug", branch = "trunk" }
+
+[lib]
+crate-type = ["cdylib"]
