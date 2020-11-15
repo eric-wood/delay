@@ -1,13 +1,9 @@
 #![allow(incomplete_features)]
 #![feature(generic_associated_types)]
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-use baseplug::{
-    ProcessContext,
-    Plugin,
-};
-
+use baseplug::{Plugin, ProcessContext};
 
 baseplug::model! {
     #[derive(Debug, Serialize, Deserialize)]
@@ -25,26 +21,32 @@ impl Default for GainModel {
             // "gain" is converted from dB to coefficient in the parameter handling code,
             // so in the model here it's a coeff.
             // -0dB == 1.0
-            gain: 1.0
+            gain: 1.0,
         }
     }
 }
 
-struct Gain;
+struct Gain {
+    delay_line: Vec<f32>,
+    index: usize,
+}
 
 impl Plugin for Gain {
     const NAME: &'static str = "basic gain plug";
     const PRODUCT: &'static str = "basic gain plug";
     const VENDOR: &'static str = "spicy plugins & co";
 
-    const INPUT_CHANNELS: usize = 2;
-    const OUTPUT_CHANNELS: usize = 2;
+    const INPUT_CHANNELS: usize = 1;
+    const OUTPUT_CHANNELS: usize = 1;
 
     type Model = GainModel;
 
     #[inline]
     fn new(_sample_rate: f32, _model: &GainModel) -> Self {
-        Self
+        Self {
+            delay_line: Vec::with_capacity(_sample_rate as usize),
+            index: 0,
+        }
     }
 
     #[inline]
@@ -53,8 +55,13 @@ impl Plugin for Gain {
         let output = &mut ctx.outputs[0].buffers;
 
         for i in 0..ctx.nframes {
-            output[0][i] = input[0][i] * model.gain[i];
-            output[1][i] = input[1][i] * model.gain[i];
+            output[0][i] = self.delay_line[self.index];
+            self.delay_line[self.index] = input[0][i];
+
+            self.index += 1;
+            if self.index >= self.delay_line.len() {
+                self.index = 0;
+            }
         }
     }
 }
