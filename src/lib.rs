@@ -36,15 +36,15 @@ impl Plugin for Gain {
     const PRODUCT: &'static str = "basic gain plug";
     const VENDOR: &'static str = "spicy plugins & co";
 
-    const INPUT_CHANNELS: usize = 1;
-    const OUTPUT_CHANNELS: usize = 1;
+    const INPUT_CHANNELS: usize = 2;
+    const OUTPUT_CHANNELS: usize = 2;
 
     type Model = GainModel;
 
     #[inline]
     fn new(sample_rate: f32, _model: &GainModel) -> Self {
         Self {
-            delay_line: vec![0.0, sample_rate],
+            delay_line: vec![0.0; sample_rate as usize],
             index: 0,
         }
     }
@@ -59,6 +59,8 @@ impl Plugin for Gain {
             // output[1][i] = input[1][i] * model.gain[i];
 
             output[0][i] = self.delay_line[self.index];
+            output[1][i] = self.delay_line[self.index];
+
             self.delay_line[self.index] = input[0][i];
 
             self.index += 1;
