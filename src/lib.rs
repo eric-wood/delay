@@ -42,9 +42,9 @@ impl Plugin for Gain {
     type Model = GainModel;
 
     #[inline]
-    fn new(_sample_rate: f32, _model: &GainModel) -> Self {
+    fn new(sample_rate: f32, _model: &GainModel) -> Self {
         Self {
-            delay_line: Vec::with_capacity(_sample_rate as usize),
+            delay_line: vec![0.0, sample_rate],
             index: 0,
         }
     }
@@ -55,6 +55,9 @@ impl Plugin for Gain {
         let output = &mut ctx.outputs[0].buffers;
 
         for i in 0..ctx.nframes {
+            // output[0][i] = input[0][i] * model.gain[i];
+            // output[1][i] = input[1][i] * model.gain[i];
+
             output[0][i] = self.delay_line[self.index];
             self.delay_line[self.index] = input[0][i];
 
