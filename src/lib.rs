@@ -55,13 +55,17 @@ impl Plugin for Gain {
         let output = &mut ctx.outputs[0].buffers;
 
         for i in 0..ctx.nframes {
-            // output[0][i] = input[0][i] * model.gain[i];
-            // output[1][i] = input[1][i] * model.gain[i];
+            // mono equivalent of input signal, for the sake of simplicity
+            let dry = input[0][i] + input[1][i] / 2.0;
+            let wet = self.delay_line[self.index];
+            let mix = model.gain[i];
 
-            output[0][i] = self.delay_line[self.index];
-            output[1][i] = self.delay_line[self.index];
+            let out_sample = (wet * mix) + (dry * (1.0 - mix));
 
-            self.delay_line[self.index] = input[0][i];
+            output[0][i] = out_sample;
+            output[1][i] = out_sample;
+
+            self.delay_line[self.index] = dry;
 
             self.index += 1;
             if self.index >= self.delay_line.len() {
