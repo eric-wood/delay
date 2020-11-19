@@ -24,7 +24,7 @@ impl Delay {
 
     #[inline]
     pub fn process(&mut self, input: f32) -> f32 {
-        let dry = ((self.last_sample * self.feedback) + input) / 2.0;
+        let dry = (self.last_sample * self.feedback) + input;
         let wet = self.delay_line[self.index];
 
         let out_sample = (wet * self.mix) + (dry * (1.0 - self.mix));
