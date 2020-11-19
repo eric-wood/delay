@@ -5,74 +5,61 @@ use serde::{Deserialize, Serialize};
 
 use baseplug::{Plugin, ProcessContext};
 
+mod delay;
+use delay::Delay;
+
 baseplug::model! {
     #[derive(Debug, Serialize, Deserialize)]
-    struct GainModel {
+    struct DelayModel {
         #[model(min = -90.0, max = 3.0)]
-        #[parameter(name = "gain", unit = "Decibels",
+        #[parameter(name = "mix", unit = "Decibels",
             gradient = "Power(0.15)")]
-        gain: f32
+        mix: f32
     }
 }
 
-impl Default for GainModel {
+impl Default for DelayModel {
     fn default() -> Self {
-        Self {
-            // "gain" is converted from dB to coefficient in the parameter handling code,
-            // so in the model here it's a coeff.
-            // -0dB == 1.0
-            gain: 1.0,
-        }
+        Self { mix: 0.5 }
     }
 }
 
-struct Gain {
-    delay_line: Vec<f32>,
-    index: usize,
+struct DelayPlugin {
+    delay_l: Delay,
+    delay_r: Delay,
 }
 
-impl Plugin for Gain {
-    const NAME: &'static str = "basic gain plug";
-    const PRODUCT: &'static str = "basic gain plug";
-    const VENDOR: &'static str = "spicy plugins & co";
+impl Plugin for DelayPlugin {
+    const NAME: &'static str = "a delay plugin";
+    const PRODUCT: &'static str = "a delay plugin";
+    const VENDOR: &'static str = "Heuristic Industries aka Eric Wood";
 
     const INPUT_CHANNELS: usize = 2;
     const OUTPUT_CHANNELS: usize = 2;
 
-    type Model = GainModel;
+    type Model = DelayModel;
 
     #[inline]
-    fn new(sample_rate: f32, _model: &GainModel) -> Self {
+    fn new(sample_rate: f32, model: &DelayModel) -> Self {
         Self {
-            delay_line: vec![0.0; sample_rate as usize],
-            index: 0,
+            delay_l: Delay::new(model.mix, 500, sample_rate),
+            delay_r: Delay::new(model.mix, 1000, sample_rate),
         }
     }
 
     #[inline]
-    fn process(&mut self, model: &GainModelProcess, ctx: &mut ProcessContext) {
+    fn process(&mut self, model: &DelayModelProcess, ctx: &mut ProcessContext) {
         let input = &ctx.inputs[0].buffers;
         let output = &mut ctx.outputs[0].buffers;
 
         for i in 0..ctx.nframes {
-            // mono equivalent of input signal, for the sake of simplicity
-            let dry = input[0][i] + input[1][i] / 2.0;
-            let wet = self.delay_line[self.index];
-            let mix = model.gain[i];
+            self.delay_l.set(model.mix[i]);
+            self.delay_r.set(model.mix[i]);
 
-            let out_sample = (wet * mix) + (dry * (1.0 - mix));
-
-            output[0][i] = out_sample;
-            output[1][i] = out_sample;
-
-            self.delay_line[self.index] = dry;
-
-            self.index += 1;
-            if self.index >= self.delay_line.len() {
-                self.index = 0;
-            }
+            output[0][i] = self.delay_l.process(input[0][i]);
+            output[1][i] = self.delay_l.process(input[1][i]);
         }
     }
 }
 
-baseplug::vst2!(Gain, b"tAnE");
+baseplug::vst2!(DelayPlugin, b"tAnE");
