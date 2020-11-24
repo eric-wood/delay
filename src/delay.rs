@@ -39,9 +39,23 @@ impl Delay {
         let delay_integer = self.length as usize;
 
         // Linear interpolation!
-        let sample_1 = self.delay_line[(self.index + delay_integer) % self.max_length];
-        let sample_2 = self.delay_line[(self.index + delay_integer + 1) % self.max_length];
-        let wet = sample_1 + (sample_2 - sample_1) * self.length.fract();
+        // let sample_1 = self.delay_line[(self.index + delay_integer) % self.max_length];
+        // let sample_2 = self.delay_line[(self.index + delay_integer - 1) % self.max_length];
+        // let wet = sample_1 + (sample_2 - sample_1) * self.length.fract();
+
+        // Hermite interpolation!
+        let t = self.index + delay_integer + self.max_length;
+        let xm1 = self.delay_line[(t - 1) % self.max_length];
+        let x0 = self.delay_line[t % self.max_length];
+        let x1 = self.delay_line[(t + 1) % self.max_length];
+        let x2 = self.delay_line[(t + 2) % self.max_length];
+        let c = (x1 - xm1) * 0.5;
+        let v = x0 - x1;
+        let w = c + v;
+        let a = w + v + (x2 - x0) * 0.5;
+        let b_neg = w + a;
+        let f = self.length.fract();
+        let wet = (((a * f) - b_neg) * f + c) * f + x0;
 
         let out_sample = (wet * self.mix) + (dry * (1.0 - self.mix));
         self.last_sample = out_sample;
