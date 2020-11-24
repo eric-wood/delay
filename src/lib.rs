@@ -19,7 +19,7 @@ baseplug::model! {
         #[parameter(name = "feedback", unit = "Decibels", gradient = "Power(0.15)")]
         feedback: f32,
 
-        #[model(min = 0.10, max = 1.0)]
+        #[model(min = 0.10, max = 1.0, smooth_ms = 20.0)]
         #[parameter(name = "time", unit = "Generic", gradient = "Linear")]
         time: f32
     }
