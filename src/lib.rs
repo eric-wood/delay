@@ -11,8 +11,8 @@ use delay::Delay;
 baseplug::model! {
     #[derive(Debug, Serialize, Deserialize)]
     struct DelayModel {
-        #[model(min = -90.0, max = 0.0)]
-        #[parameter(name = "mix", unit = "Decibels", gradient = "Power(0.15)")]
+        #[model(min = 0.0, max = 1.0)]
+        #[parameter(name = "mix", unit = "Generic", gradient = "Linear")]
         mix: f32,
 
         #[model(min = -90.0, max = 0.0)]
@@ -23,7 +23,7 @@ baseplug::model! {
         #[parameter(name = "time", unit = "Generic", gradient = "Linear")]
         time: f32,
 
-        #[model(min = 0.0, max = 1.0)]
+        #[model(min = 0.0, max = 1.0, smooth_ms = 0.0)]
         #[parameter(name = "freeze", unit = "Generic", gradient = "Linear")]
         freeze: f32,
     }
