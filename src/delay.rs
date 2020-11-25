@@ -72,6 +72,8 @@ impl Delay {
 
         if self.freeze < 0.5 {
             self.delay_line[self.index] = dry;
+        } else {
+            self.delay_line[self.index] = wet;
         }
 
         self.index = (self.index + self.max_length - 1) % self.max_length;
