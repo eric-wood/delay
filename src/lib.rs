@@ -19,9 +19,13 @@ baseplug::model! {
         #[parameter(name = "feedback", unit = "Decibels", gradient = "Power(0.15)")]
         feedback: f32,
 
-        #[model(min = 0.10, max = 1.0, smooth_ms = 20.0)]
+        #[model(min = 0.10, max = 1.0, smooth_ms = 50.0)]
         #[parameter(name = "time", unit = "Generic", gradient = "Linear")]
-        time: f32
+        time: f32,
+
+        #[model(min = 0.0, max = 1.0)]
+        #[parameter(name = "freeze", unit = "Generic", gradient = "Linear")]
+        freeze: f32,
     }
 }
 
@@ -31,6 +35,7 @@ impl Default for DelayModel {
             mix: 0.5,
             feedback: 0.2,
             time: 0.5,
+            freeze: 0.0,
         }
     }
 }
@@ -53,8 +58,8 @@ impl Plugin for DelayPlugin {
     #[inline]
     fn new(sample_rate: f32, model: &DelayModel) -> Self {
         Self {
-            delay_l: Delay::new(model.mix, 0.2, 1.0, model.time, sample_rate),
-            delay_r: Delay::new(model.mix, 0.2, 1.0, model.time, sample_rate),
+            delay_l: Delay::new(model.mix, 0.2, 1.0, model.time, sample_rate, 0.0),
+            delay_r: Delay::new(model.mix, 0.2, 1.0, model.time, sample_rate, 0.0),
         }
     }
 
@@ -64,10 +69,18 @@ impl Plugin for DelayPlugin {
         let output = &mut ctx.outputs[0].buffers;
 
         for i in 0..ctx.nframes {
-            self.delay_l
-                .set(model.mix[i], model.feedback[i], model.time[i]);
-            self.delay_r
-                .set(model.mix[i], model.feedback[i], model.time[i]);
+            self.delay_l.set(
+                model.mix[i],
+                model.feedback[i],
+                model.time[i],
+                model.freeze[i],
+            );
+            self.delay_r.set(
+                model.mix[i],
+                model.feedback[i],
+                model.time[i],
+                model.freeze[i],
+            );
 
             output[0][i] = self.delay_l.process(input[0][i]);
             output[1][i] = self.delay_l.process(input[1][i]);

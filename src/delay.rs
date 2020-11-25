@@ -7,10 +7,18 @@ pub struct Delay {
     length: f32,
     max_length: usize,
     sample_rate: f32,
+    freeze: f32,
 }
 
 impl Delay {
-    pub fn new(mix: f32, feedback: f32, max_length: f32, length: f32, sample_rate: f32) -> Self {
+    pub fn new(
+        mix: f32,
+        feedback: f32,
+        max_length: f32,
+        length: f32,
+        sample_rate: f32,
+        freeze: f32,
+    ) -> Self {
         let max_samples = (sample_rate * max_length) as usize;
         let length_samples = sample_rate * length;
 
@@ -23,13 +31,15 @@ impl Delay {
             length: length_samples,
             max_length: max_samples,
             sample_rate,
+            freeze,
         }
     }
 
-    pub fn set(&mut self, mix: f32, feedback: f32, length: f32) {
+    pub fn set(&mut self, mix: f32, feedback: f32, length: f32, freeze: f32) {
         self.mix = mix;
         self.feedback = feedback;
         self.length = self.sample_rate * length;
+        self.freeze = freeze;
     }
 
     #[inline]
@@ -59,7 +69,10 @@ impl Delay {
 
         let out_sample = (wet * self.mix) + (dry * (1.0 - self.mix));
         self.last_sample = out_sample;
-        self.delay_line[self.index] = dry;
+
+        if self.freeze < 0.5 {
+            self.delay_line[self.index] = dry;
+        }
 
         self.index = (self.index + self.max_length - 1) % self.max_length;
 
