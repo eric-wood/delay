@@ -64,7 +64,7 @@ impl Plugin for DelayPlugin {
     }
 
     #[inline]
-    fn process(&mut self, model: &DelayModelProcess, ctx: &mut ProcessContext) {
+    fn process(&mut self, model: &DelayModelProcess, ctx: &mut ProcessContext<Self>) {
         let input = &ctx.inputs[0].buffers;
         let output = &mut ctx.outputs[0].buffers;
 

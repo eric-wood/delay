@@ -9,20 +9,20 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 [[package]]
 name = "baseplug"
 version = "0.1.0"
-source = "git+https://github.com/wrl/baseplug?branch=trunk#d0857e9a5a97c1f36f48196288c1eaaeb0baa09d"
+source = "git+https://github.com/wrl/baseplug?branch=trunk#22d31f4b4fdb55f52190e0747ae7d3dc4b654acc"
 dependencies = [
  "baseplug-derive",
  "num-traits",
  "raw-window-handle",
  "serde",
  "serde_json",
- "vst 0.2.0",
+ "vst 0.2.1",
 ]
 
 [[package]]
 name = "baseplug-derive"
 version = "0.1.0"
-source = "git+https://github.com/wrl/baseplug?branch=trunk#d0857e9a5a97c1f36f48196288c1eaaeb0baa09d"
+source = "git+https://github.com/wrl/baseplug?branch=trunk#22d31f4b4fdb55f52190e0747ae7d3dc4b654acc"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -37,9 +37,9 @@ checksum = "cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693"
 
 [[package]]
 name = "cc"
-version = "1.0.62"
+version = "1.0.65"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1770ced377336a88a67c473594ccc14eca6f4559217c34f64aac8f83d641b40"
+checksum = "95752358c8f7552394baf48cd82695b345628ad3f170d607de3ca03b8dacca15"
 
 [[package]]
 name = "cfg-if"
@@ -153,9 +153,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.48"
+version = "1.0.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc371affeffc477f42a221a1e4297aedcea33d47d19b61455588bd9d8f6b19ac"
+checksum = "6c1e438504729046a5cfae47f97c30d6d083c7d91d94603efdae3477fc070d4c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -174,14 +174,14 @@ version = "0.1.0"
 dependencies = [
  "baseplug",
  "serde",
- "vst 0.2.0",
+ "vst 0.2.1",
 ]
 
 [[package]]
 name = "vst"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f282ef6465008618bb1e3de35760f01f9df361ea4f44a47144e96b8b67b9f28"
+checksum = "1dfeaf21be445e1d9edf37bdedbf7ec24b43ed84ace6295cba3e0d01c1a49a27"
 dependencies = [
  "bitflags",
  "libc",
