@@ -22,7 +22,7 @@ impl Filter {
     let lpf_coefficients = Coefficients::<f32>::from_params(
       biquad::Type::LowPass,
       biquad::Hertz::<f32>::from_hz(sample_rate).unwrap(),
-      biquad::Hertz::<f32>::from_hz(1000.0).unwrap(),
+      biquad::Hertz::<f32>::from_hz(400.0).unwrap(),
       biquad::Q_BUTTERWORTH_F32,
     )
     .unwrap();
