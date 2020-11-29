@@ -37,9 +37,9 @@ baseplug::model! {
         #[parameter(name = "tone", unit = "Generic", gradient = "Linear")]
         tone: f32,
 
-        #[model(min = 0.0, max = 1.0)]
-        #[parameter(name = "threshold", unit = "Generic", gradient = "Linear")]
-        threshold: f32,
+        #[model(min = 0.0, max = 20.0)]
+        #[parameter(name = "gain", unit = "Decibels", gradient = "Power(0.15)")]
+        gain: f32,
     }
 }
 
@@ -51,7 +51,7 @@ impl Default for DelayModel {
             time: 0.5,
             freeze: 0.0,
             tone: 1.0,
-            threshold: 1.0,
+            gain: 1.0,
         }
     }
 }
@@ -82,8 +82,8 @@ impl Plugin for DelayPlugin {
             delay_r: Delay::new(0.2, 1.0, model.time, sample_rate, 0.0),
             filter_l: Filter::new(model.tone, sample_rate),
             filter_r: Filter::new(model.tone, sample_rate),
-            clipper_l: Clipper::new(model.threshold),
-            clipper_r: Clipper::new(model.threshold),
+            clipper_l: Clipper::new(model.gain),
+            clipper_r: Clipper::new(model.gain),
         }
     }
 
@@ -101,8 +101,8 @@ impl Plugin for DelayPlugin {
             self.filter_l.set(model.tone[i]);
             self.filter_r.set(model.tone[i]);
 
-            self.clipper_l.set(model.threshold[i]);
-            self.clipper_r.set(model.threshold[i]);
+            self.clipper_l.set(model.gain[i]);
+            self.clipper_r.set(model.gain[i]);
 
             let delay_wet_l = self.delay_l.process(input[0][i]);
             let delay_wet_r = self.delay_r.process(input[0][i]);
