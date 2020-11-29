@@ -8,6 +8,9 @@ use baseplug::{Plugin, ProcessContext};
 mod delay;
 use delay::Delay;
 
+mod filter;
+use filter::Filter;
+
 baseplug::model! {
     #[derive(Debug, Serialize, Deserialize)]
     struct DelayModel {
@@ -26,6 +29,10 @@ baseplug::model! {
         #[model(min = 0.0, max = 1.0, smooth_ms = 0.0)]
         #[parameter(name = "freeze", unit = "Generic", gradient = "Linear")]
         freeze: f32,
+
+        #[model(min = 10.0, max = 16_000.0, smooth_ms = 20.0)]
+        #[parameter(name = "cutoff", label = "hz", gradient = "Exponential")]
+        cutoff: f32,
     }
 }
 
@@ -36,6 +43,7 @@ impl Default for DelayModel {
             feedback: 0.2,
             time: 0.5,
             freeze: 0.0,
+            cutoff: 10_000.0,
         }
     }
 }
@@ -43,6 +51,8 @@ impl Default for DelayModel {
 struct DelayPlugin {
     delay_l: Delay,
     delay_r: Delay,
+    filter_l: Filter,
+    filter_r: Filter,
 }
 
 impl Plugin for DelayPlugin {
@@ -60,6 +70,8 @@ impl Plugin for DelayPlugin {
         Self {
             delay_l: Delay::new(model.mix, 0.2, 1.0, model.time, sample_rate, 0.0),
             delay_r: Delay::new(model.mix, 0.2, 1.0, model.time, sample_rate, 0.0),
+            filter_l: Filter::new(model.cutoff, sample_rate),
+            filter_r: Filter::new(model.cutoff, sample_rate),
         }
     }
 
@@ -82,8 +94,13 @@ impl Plugin for DelayPlugin {
                 model.freeze[i],
             );
 
-            output[0][i] = self.delay_l.process(input[0][i]);
-            output[1][i] = self.delay_l.process(input[1][i]);
+            self.filter_l.set(model.cutoff[i]);
+            self.filter_r.set(model.cutoff[i]);
+
+            output[0][i] = self.filter_l.process(input[0][i]);
+            output[1][i] = self.filter_r.process(input[1][i]);
+            // output[0][i] = self.delay_l.process(input[0][i]);
+            // output[1][i] = self.delay_l.process(input[1][i]);
         }
     }
 }
