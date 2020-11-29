@@ -68,8 +68,8 @@ impl Plugin for DelayPlugin {
     #[inline]
     fn new(sample_rate: f32, model: &DelayModel) -> Self {
         Self {
-            delay_l: Delay::new(model.mix, 0.2, 1.0, model.time, sample_rate, 0.0),
-            delay_r: Delay::new(model.mix, 0.2, 1.0, model.time, sample_rate, 0.0),
+            delay_l: Delay::new(0.2, 1.0, model.time, sample_rate, 0.0),
+            delay_r: Delay::new(0.2, 1.0, model.time, sample_rate, 0.0),
             filter_l: Filter::new(model.tone, sample_rate),
             filter_r: Filter::new(model.tone, sample_rate),
         }
@@ -81,26 +81,22 @@ impl Plugin for DelayPlugin {
         let output = &mut ctx.outputs[0].buffers;
 
         for i in 0..ctx.nframes {
-            self.delay_l.set(
-                model.mix[i],
-                model.feedback[i],
-                model.time[i],
-                model.freeze[i],
-            );
-            self.delay_r.set(
-                model.mix[i],
-                model.feedback[i],
-                model.time[i],
-                model.freeze[i],
-            );
+            self.delay_l
+                .set(model.feedback[i], model.time[i], model.freeze[i]);
+            self.delay_r
+                .set(model.feedback[i], model.time[i], model.freeze[i]);
 
             self.filter_l.set(model.tone[i]);
             self.filter_r.set(model.tone[i]);
 
-            output[0][i] = self.filter_l.process(input[0][i]);
-            output[1][i] = self.filter_r.process(input[1][i]);
-            // output[0][i] = self.delay_l.process(input[0][i]);
-            // output[1][i] = self.delay_l.process(input[1][i]);
+            let delay_wet_l = self.delay_l.process(input[0][i]);
+            let delay_wet_r = self.delay_r.process(input[0][i]);
+
+            let filtered_delay_l = self.filter_l.process(delay_wet_l);
+            let filtered_delay_r = self.filter_l.process(delay_wet_r);
+
+            output[0][i] = (filtered_delay_l * model.mix[i]) + (input[0][i] * (1.0 - model.mix[i]));
+            output[1][i] = (filtered_delay_r * model.mix[i]) + (input[1][i] * (1.0 - model.mix[i]));
         }
     }
 }
