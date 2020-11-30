@@ -1,3 +1,5 @@
+use crate::clipper::Clipper;
+
 pub struct Delay {
     delay_line: Vec<f32>,
     index: usize,
@@ -7,12 +9,15 @@ pub struct Delay {
     max_length: usize,
     sample_rate: f32,
     freeze: f32,
+    clipper: Clipper,
 }
 
 impl Delay {
     pub fn new(feedback: f32, max_length: f32, length: f32, sample_rate: f32, freeze: f32) -> Self {
         let max_samples = (sample_rate * max_length) as usize;
         let length_samples = sample_rate * length;
+
+        let clipper = Clipper::new(1.0);
 
         Delay {
             delay_line: vec![0.0; max_samples as usize],
@@ -23,6 +28,7 @@ impl Delay {
             max_length: max_samples,
             sample_rate,
             freeze,
+            clipper,
         }
     }
 
@@ -67,6 +73,6 @@ impl Delay {
 
         self.index = (self.index + self.max_length - 1) % self.max_length;
 
-        return wet;
+        return self.clipper.process(wet);
     }
 }

@@ -1,3 +1,5 @@
+set -e
+
 cargo build
 
 ./macos_package.sh Plugin target/debug/libvst.dylib
