@@ -73,6 +73,6 @@ impl Delay {
 
         self.index = (self.index + self.max_length - 1) % self.max_length;
 
-        return self.clipper.process(wet);
+        self.clipper.process(wet)
     }
 }
