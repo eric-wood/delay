@@ -17,7 +17,7 @@ impl Delay {
         let max_samples = (sample_rate * max_length) as usize;
         let length_samples = sample_rate * length;
 
-        let clipper = Clipper::new(1.0);
+        let clipper = Clipper::new(1.0, false);
 
         Delay {
             delay_line: vec![0.0; max_samples as usize],
