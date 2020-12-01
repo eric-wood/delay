@@ -82,8 +82,8 @@ impl Plugin for DelayPlugin {
             delay_r: Delay::new(0.2, 1.0, model.time, sample_rate, 0.0),
             filter_l: Filter::new(model.tone, sample_rate),
             filter_r: Filter::new(model.tone, sample_rate),
-            clipper_l: Clipper::new(model.distort, false),
-            clipper_r: Clipper::new(model.distort, false),
+            clipper_l: Clipper::new(model.distort),
+            clipper_r: Clipper::new(model.distort),
         }
     }
 
@@ -113,12 +113,11 @@ impl Plugin for DelayPlugin {
             let filtered_delay_l = self.filter_l.process(delay_wet_l);
             let filtered_delay_r = self.filter_l.process(delay_wet_r);
 
+            // Use this for a wet/dry control instead (maybe that'll be necessary in the future?)
             // output[0][i] = (filtered_delay_l * model.mix[i]) + (input[0][i] * (1.0 - model.mix[i]));
             // output[1][i] = (filtered_delay_r * model.mix[i]) + (input[1][i] * (1.0 - model.mix[i]));
             output[0][i] = (filtered_delay_l * model.mix[i]) + input[0][i];
             output[1][i] = (filtered_delay_r * model.mix[i]) + input[1][i];
-            // output[0][i] = self.clipper_l.process(input[0][i]);
-            // output[1][i] = self.clipper_r.process(input[1][i]);
         }
     }
 }
