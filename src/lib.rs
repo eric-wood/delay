@@ -14,6 +14,9 @@ use filter::Filter;
 mod clipper;
 use clipper::Clipper;
 
+mod svf;
+use svf::Svf;
+
 baseplug::model! {
     #[derive(Debug, Serialize, Deserialize)]
     struct DelayModel {
@@ -116,6 +119,7 @@ impl Plugin for DelayPlugin {
             // Use this for a wet/dry control instead (maybe that'll be necessary in the future?)
             // output[0][i] = (filtered_delay_l * model.mix[i]) + (input[0][i] * (1.0 - model.mix[i]));
             // output[1][i] = (filtered_delay_r * model.mix[i]) + (input[1][i] * (1.0 - model.mix[i]));
+
             output[0][i] = (filtered_delay_l * model.mix[i]) + input[0][i];
             output[1][i] = (filtered_delay_r * model.mix[i]) + input[1][i];
         }
