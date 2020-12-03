@@ -15,7 +15,9 @@ mod clipper;
 use clipper::Clipper;
 
 mod svf;
-use svf::Svf;
+
+mod bandpass;
+use bandpass::Bandpass;
 
 baseplug::model! {
     #[derive(Debug, Serialize, Deserialize)]
@@ -43,6 +45,14 @@ baseplug::model! {
         #[model(min = 1.0, max = 20.0)]
         #[parameter(name = "distort", unit = "Generic", gradient = "Linear")]
         distort: f32,
+
+        #[model(min = 10.0, max = 20_000.0)]
+        #[parameter(name = "cutoff", label = "hz", gradient = "Exponential")]
+        cutoff: f32,
+
+        #[model(min = 100.0, max = 10_000.0)]
+        #[parameter(name = "bandwidth", label = "hz", gradient = "Exponential")]
+        bandwidth: f32
     }
 }
 
@@ -55,6 +65,8 @@ impl Default for DelayModel {
             freeze: 0.0,
             tone: 1.0,
             distort: 1.0,
+            cutoff: 1_000.0,
+            bandwidth: 1_000.0,
         }
     }
 }
@@ -66,6 +78,8 @@ struct DelayPlugin {
     filter_r: Filter,
     clipper_l: Clipper,
     clipper_r: Clipper,
+    bandpass_l: Bandpass,
+    bandpass_r: Bandpass,
 }
 
 impl Plugin for DelayPlugin {
@@ -87,6 +101,8 @@ impl Plugin for DelayPlugin {
             filter_r: Filter::new(model.tone, sample_rate),
             clipper_l: Clipper::new(model.distort),
             clipper_r: Clipper::new(model.distort),
+            bandpass_l: Bandpass::new(model.cutoff, model.bandwidth, sample_rate),
+            bandpass_r: Bandpass::new(model.cutoff, model.bandwidth, sample_rate),
         }
     }
 
@@ -120,8 +136,14 @@ impl Plugin for DelayPlugin {
             // output[0][i] = (filtered_delay_l * model.mix[i]) + (input[0][i] * (1.0 - model.mix[i]));
             // output[1][i] = (filtered_delay_r * model.mix[i]) + (input[1][i] * (1.0 - model.mix[i]));
 
-            output[0][i] = (filtered_delay_l * model.mix[i]) + input[0][i];
-            output[1][i] = (filtered_delay_r * model.mix[i]) + input[1][i];
+            // output[0][i] = (filtered_delay_l * model.mix[i]) + input[0][i];
+            // output[1][i] = (filtered_delay_r * model.mix[i]) + input[1][i];
+
+            self.bandpass_l.set(model.cutoff[i], model.bandwidth[i]);
+            self.bandpass_r.set(model.cutoff[i], model.bandwidth[i]);
+
+            output[0][i] = self.bandpass_l.process(input[0][i]);
+            output[1][i] = self.bandpass_r.process(input[1][i]);
         }
     }
 }

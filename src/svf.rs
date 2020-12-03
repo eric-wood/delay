@@ -49,6 +49,7 @@ impl Svf {
     self.a1 = new.a1;
     self.a2 = new.a2;
     self.a3 = new.a3;
+    self.k = new.k;
   }
 
   pub fn process(&mut self, input: f32) -> f32 {
