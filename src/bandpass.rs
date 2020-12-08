@@ -55,9 +55,9 @@ impl Bandpass {
   }
 
   pub fn process(&mut self, input: f32) -> f32 {
-    let hpf_out = self.hpf.process(input);
-    let lpf_out = self.lpf.process(hpf_out);
+    let lpf_out = self.lpf.process(input);
+    let hpf_out = self.hpf.process(lpf_out);
 
-    lpf_out
+    hpf_out
   }
 }
