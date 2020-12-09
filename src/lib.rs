@@ -15,7 +15,6 @@ mod clipper;
 use clipper::Clipper;
 
 mod svf;
-use svf::Svf;
 
 baseplug::model! {
     #[derive(Debug, Serialize, Deserialize)]
@@ -39,10 +38,6 @@ baseplug::model! {
         #[model(min = 0.0, max = 2.0)]
         #[parameter(name = "tone", unit = "Generic", gradient = "Linear")]
         tone: f32,
-
-        #[model(min = 1.0, max = 20.0)]
-        #[parameter(name = "distort", unit = "Generic", gradient = "Linear")]
-        distort: f32,
     }
 }
 
@@ -54,7 +49,6 @@ impl Default for DelayModel {
             time: 0.5,
             freeze: 0.0,
             tone: 1.0,
-            distort: 1.0,
         }
     }
 }
@@ -85,8 +79,8 @@ impl Plugin for DelayPlugin {
             delay_r: Delay::new(0.2, 1.0, model.time, sample_rate, 0.0),
             filter_l: Filter::new(model.tone, sample_rate),
             filter_r: Filter::new(model.tone, sample_rate),
-            clipper_l: Clipper::new(model.distort),
-            clipper_r: Clipper::new(model.distort),
+            clipper_l: Clipper::new(1.0),
+            clipper_r: Clipper::new(1.0),
         }
     }
 
@@ -104,11 +98,8 @@ impl Plugin for DelayPlugin {
             self.filter_l.set(model.tone[i]);
             self.filter_r.set(model.tone[i]);
 
-            self.clipper_l.set(model.distort[i]);
-            self.clipper_r.set(model.distort[i]);
-
             let clipped_l = self.clipper_l.process(input[0][i]);
-            let clipped_r = self.clipper_l.process(input[0][i]);
+            let clipped_r = self.clipper_r.process(input[1][i]);
 
             let delay_wet_l = self.delay_l.process(clipped_l);
             let delay_wet_r = self.delay_r.process(clipped_r);

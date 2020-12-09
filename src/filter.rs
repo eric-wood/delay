@@ -1,34 +1,17 @@
-use biquad::Biquad;
-use biquad::Coefficients;
+// Implements a tone control; 1.0 is unffected, < 1.0 is lowpassed, > 1.0 is highpassed
 
-// Implements a big muff style tone stack, where a high pass and low pass filter are mixed together
+use crate::svf::{Svf, Type};
 
 pub struct Filter {
   mix: f32,
-  hpf: biquad::DirectForm1<f32>,
-  lpf: biquad::DirectForm1<f32>,
+  hpf: Svf,
+  lpf: Svf,
 }
 
 impl Filter {
   pub fn new(mix: f32, sample_rate: f32) -> Self {
-    let hpf_coefficients = Coefficients::<f32>::from_params(
-      biquad::Type::HighPass,
-      biquad::Hertz::<f32>::from_hz(sample_rate).unwrap(),
-      biquad::Hertz::<f32>::from_hz(1000.0).unwrap(),
-      biquad::Q_BUTTERWORTH_F32,
-    )
-    .unwrap();
-
-    let lpf_coefficients = Coefficients::<f32>::from_params(
-      biquad::Type::LowPass,
-      biquad::Hertz::<f32>::from_hz(sample_rate).unwrap(),
-      biquad::Hertz::<f32>::from_hz(400.0).unwrap(),
-      biquad::Q_BUTTERWORTH_F32,
-    )
-    .unwrap();
-
-    let hpf = biquad::DirectForm1::<f32>::new(hpf_coefficients);
-    let lpf = biquad::DirectForm1::<f32>::new(lpf_coefficients);
+    let hpf = Svf::new(1_000.0, 0.0, Type::HighPass, sample_rate);
+    let lpf = Svf::new(400.0, 0.0, Type::LowPass, sample_rate);
 
     Filter { mix, hpf, lpf }
   }
@@ -39,8 +22,8 @@ impl Filter {
 
   #[inline]
   pub fn process(&mut self, input: f32) -> f32 {
-    let hpf_out = self.hpf.run(input);
-    let lpf_out = self.lpf.run(input);
+    let hpf_out = self.hpf.process(input);
+    let lpf_out = self.lpf.process(input);
 
     // For the classic version with the mid hump...
     // (hpf_out * self.mix) + (lpf_out * (1.0 - self.mix))
