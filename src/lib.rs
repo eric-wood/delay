@@ -16,6 +16,11 @@ use clipper::Clipper;
 
 mod svf;
 
+mod sine_oscillator;
+
+mod modulation;
+use modulation::Modulation;
+
 baseplug::model! {
     #[derive(Debug, Serialize, Deserialize)]
     struct DelayModel {
@@ -38,6 +43,14 @@ baseplug::model! {
         #[model(min = 0.0, max = 2.0)]
         #[parameter(name = "tone", unit = "Generic", gradient = "Linear")]
         tone: f32,
+
+        #[model(min = 0.0, max = 5.0)]
+        #[parameter(name = "rate", unit = "Generic", gradient = "Linear")]
+        rate: f32,
+
+        #[model(min = 0.0, max = 0.005)]
+        #[parameter(name = "depth", unit = "Generic", gradient = "Linear")]
+        depth: f32,
     }
 }
 
@@ -49,6 +62,8 @@ impl Default for DelayModel {
             time: 0.5,
             freeze: 0.0,
             tone: 1.0,
+            rate: 0.0,
+            depth: 0.0,
         }
     }
 }
@@ -60,6 +75,7 @@ struct DelayPlugin {
     filter_r: Filter,
     clipper_l: Clipper,
     clipper_r: Clipper,
+    modulator: Modulation,
 }
 
 impl Plugin for DelayPlugin {
@@ -81,6 +97,7 @@ impl Plugin for DelayPlugin {
             filter_r: Filter::new(model.tone, sample_rate),
             clipper_l: Clipper::new(1.0),
             clipper_r: Clipper::new(1.0),
+            modulator: Modulation::new(sample_rate, model.rate, model.depth),
         }
     }
 
@@ -90,10 +107,19 @@ impl Plugin for DelayPlugin {
         let output = &mut ctx.outputs[0].buffers;
 
         for i in 0..ctx.nframes {
-            self.delay_l
-                .set(model.feedback[i], model.time[i], model.freeze[i]);
-            self.delay_r
-                .set(model.feedback[i], model.time[i], model.freeze[i]);
+            self.modulator.set(model.rate[i], model.depth[i]);
+            let delay_addition = self.modulator.process();
+
+            self.delay_l.set(
+                model.feedback[i],
+                model.time[i] + delay_addition,
+                model.freeze[i],
+            );
+            self.delay_r.set(
+                model.feedback[i],
+                model.time[i] + delay_addition,
+                model.freeze[i],
+            );
 
             self.filter_l.set(model.tone[i]);
             self.filter_r.set(model.tone[i]);
@@ -105,7 +131,7 @@ impl Plugin for DelayPlugin {
             let delay_wet_r = self.delay_r.process(clipped_r);
 
             let filtered_delay_l = self.filter_l.process(delay_wet_l);
-            let filtered_delay_r = self.filter_l.process(delay_wet_r);
+            let filtered_delay_r = self.filter_r.process(delay_wet_r);
 
             // Use this for a wet/dry control instead (maybe that'll be necessary in the future?)
             // output[0][i] = (filtered_delay_l * model.mix[i]) + (input[0][i] * (1.0 - model.mix[i]));

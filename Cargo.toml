@@ -8,6 +8,7 @@ edition = "2018"
 serde = "1.0.117"
 vst = "0.2.0"
 baseplug = { git = "https://github.com/wrl/baseplug", branch = "trunk" }
+rand = "0.7.3"
 
 [lib]
 crate-type = ["cdylib"]

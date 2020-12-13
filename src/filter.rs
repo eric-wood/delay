@@ -22,17 +22,28 @@ impl Filter {
 
   #[inline]
   pub fn process(&mut self, input: f32) -> f32 {
-    let hpf_out = self.hpf.process(input);
-    let lpf_out = self.lpf.process(input);
+    // let hpf_out = self.hpf.process(input);
+    // let lpf_out = self.lpf.process(input);
 
     // For the classic version with the mid hump...
     // (hpf_out * self.mix) + (lpf_out * (1.0 - self.mix))
 
     // Improved and completely flat at 50%
+    // if self.mix > 1.0 {
+    //   (hpf_out * (self.mix - 1.0)) + (input * (1.0 - (self.mix - 1.0)))
+    // } else {
+    //   (lpf_out * (1.0 - self.mix)) + (input * (1.0 - (1.0 - self.mix)))
+    // }
+
+    // LPF < 50%, HPF > 50% with sweep instead of mixing
     if self.mix > 1.0 {
-      (hpf_out * (self.mix - 1.0)) + (input * (1.0 - (self.mix - 1.0)))
+      let cutoff = ((self.mix - 1.0) * 5_000.0) + 400.0;
+      self.hpf.set(cutoff, 0.0);
+      self.hpf.process(input)
     } else {
-      (lpf_out * (1.0 - self.mix)) + (input * (1.0 - (1.0 - self.mix)))
+      let cutoff = (self.mix * 10_000.0) + 400.0;
+      self.lpf.set(cutoff, 0.0);
+      self.lpf.process(input)
     }
   }
 }
