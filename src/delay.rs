@@ -40,7 +40,8 @@ impl Delay {
 
     #[inline]
     pub fn process(&mut self, input: f32) -> f32 {
-        let dry = (self.last_sample * self.feedback) + input;
+        let mixed = (self.last_sample * self.feedback) + input;
+        let dry = self.clipper.process(mixed);
 
         let delay_integer = self.length as usize;
 
@@ -73,6 +74,6 @@ impl Delay {
 
         self.index = (self.index + self.max_length - 1) % self.max_length;
 
-        self.clipper.process(wet)
+        wet
     }
 }
